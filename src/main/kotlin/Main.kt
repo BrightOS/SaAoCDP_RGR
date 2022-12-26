@@ -1,3 +1,9 @@
+
+import javax.swing.tree.TreeNode
+
+
+var lastOperatedDepth = 0
+
 internal class BTreeNode(
     var minimumDegree: Int, // Минимальное количество ключей
     var isLeaf: Boolean // Лист или нет
@@ -7,8 +13,8 @@ internal class BTreeNode(
     var currentSize: Int // Количество ключей в узле
 
     init {
-        keys = IntArray(2 * minimumDegree - 1) // Узел может иметь максимум 2t - 1 ключей
-        children = arrayOfNulls(2 * minimumDegree)
+        keys = IntArray(2 * minimumDegree) // Узел может иметь максимум 2t - 1 ключей
+        children = arrayOfNulls(2 * minimumDegree + 1)
         currentSize = 0
     }
 
@@ -234,7 +240,29 @@ internal class BTreeNode(
         currentSize++
     }
 
-    fun traverse(sb: StringBuilder, depth: Int) {
+//    fun print(buffer: StringBuilder, prefix: String, childrenPrefix: String) {
+//        buffer.append(prefix)
+//        buffer.append("[")
+//        repeat(currentSize) {
+//            buffer.append("${keys[it]} | ")
+//        }
+//        buffer.deleteRange(buffer.length - 3, buffer.length)
+//        buffer.append("]")
+//        buffer.append('\n')
+//        val it: Iterator<BTreeNode?> = children.toMutableList().apply {
+//            removeIf { it == null }
+//        }.iterator()
+//        while (it.hasNext()) {
+//            val next = it.next()
+//            if (it.hasNext()) {
+//                next?.print(buffer, "$childrenPrefix├── ", "$childrenPrefix│   ")
+//            } else {
+//                next?.print(buffer, "$childrenPrefix└── ", "$childrenPrefix    ")
+//            }
+//        }
+//    }
+
+    fun traverse(sb: ArrayList<String>, depth: Int) {
         var i = 0
 
 //        sb.append("\n")
@@ -242,13 +270,27 @@ internal class BTreeNode(
 //            sb.append("\t")
 //        }
 
-        sb.append("\n{ $depth | ")
+        while (sb.size <= depth) {
+            sb.add("")
+        }
+
+        sb[depth] += "["
+        repeat(currentSize) {
+            sb[depth] += "${keys[it]} | "
+            sb.forEachIndexed { index, s ->
+                if (index != depth)
+                    sb[index] += " ".repeat("${keys[it]} | ".length)
+            }
+        }
+        sb[depth] = sb[depth].removeRange(sb[depth].length - 3, sb[depth].length)
+        sb[depth] += "] "
+
+
         while (i < currentSize) {
             if (!isLeaf)
                 children[i]?.traverse(sb, depth + 1)
-            sb.append("${keys[i++]} ")
+            i++
         }
-        sb.append("} ")
 
         if (!isLeaf)
             children[i]?.traverse(sb, depth + 1)
@@ -266,10 +308,14 @@ internal class BTree(var minimumDegree: Int) {
     var root: BTreeNode? = null
 
     fun traverse() {
+//        val buffer = java.lang.StringBuilder(100)
+//        root?.print(buffer, "", "")
+//        println(buffer.toString())
+        lastOperatedDepth = 0
         println("--------------------")
-        val sb = StringBuilder()
+        val sb = arrayListOf<String>()
         root?.traverse(sb, 0)
-        println(sb.toString())
+        sb.forEach { println(it) }
         println("--------------------")
     }
 
@@ -315,7 +361,7 @@ internal class BTree(var minimumDegree: Int) {
 }
 
 fun main() {
-    val t = BTree(2)
+    val t = MyBTree(2)
     t.insert(1)
     t.insert(3)
     t.insert(7)
@@ -326,9 +372,13 @@ fun main() {
     t.insert(15)
     t.insert(18)
     t.insert(16)
+    t.insert(33)
+    t.insert(34)
+    t.insert(29)
     t.insert(19)
     t.insert(24)
     t.insert(25)
+    t.insert(32)
     t.insert(26)
     t.insert(21)
     t.insert(4)
@@ -336,34 +386,42 @@ fun main() {
     t.insert(20)
     t.insert(22)
     t.insert(2)
+    t.insert(31)
     t.insert(17)
     t.insert(12)
     t.insert(6)
+    t.insert(30)
 
     println("Traversal of tree constructed is")
     t.traverse()
 
-    t.remove(6)
-    println("Traversal of tree after removing 6")
-    t.traverse()
+    listOf(1, 6, 16, 25, 10, 17, 26, 101).forEach {
+        println("Number $it ${if (t.search(it) != null) "found" else "not found"}")
+    }
 
-    t.remove(13)
-    println("Traversal of tree after removing 13")
-    t.traverse()
-
-    t.remove(7)
-    println("Traversal of tree after removing 7")
-    t.traverse()
-
-    t.remove(4)
-    println("Traversal of tree after removing 4")
-    t.traverse()
-
-    t.remove(2)
-    println("Traversal of tree after removing 2")
-    t.traverse()
-
-    t.remove(16)
-    println("Traversal of tree after removing 16")
-    t.traverse()
+    listOf(6, 13, 7, 4, 2, 16, 24).forEach {
+        t.remove(it)
+        println("Traversal of tree after removing $it")
+        t.traverse()
+    }
+//
+//    t.remove(13)
+//    println("Traversal of tree after removing 13")
+//    t.traverse()
+//
+//    t.remove(7)
+//    println("Traversal of tree after removing 7")
+//    t.traverse()
+//
+//    t.remove(4)
+//    println("Traversal of tree after removing 4")
+//    t.traverse()
+//
+//    t.remove(2)
+//    println("Traversal of tree after removing 2")
+//    t.traverse()
+//
+//    t.remove(16)
+//    println("Traversal of tree after removing 16")
+//    t.traverse()
 }
