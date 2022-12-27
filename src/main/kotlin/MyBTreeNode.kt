@@ -59,9 +59,6 @@ class MyBTreeNode(val power: Int, var bTree: MyBTree, var isLeaf: Boolean = fals
             if (isLeaf)
                 return
 
-//            if (children[index].keys.size <= minimumKeys)
-//                fill(index)
-//
             children[index].remove(key)
 
             if (children[index].keys.size < minimumKeys)
