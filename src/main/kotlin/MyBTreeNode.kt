@@ -1,6 +1,4 @@
-import kotlin.math.min
-
-class MyBTreeNode(val power: Int, var isLeaf: Boolean = false, var parentNode: MyBTreeNode? = null) {
+class MyBTreeNode(val power: Int, var bTree: MyBTree, var isLeaf: Boolean = false, var parentNode: MyBTreeNode? = null) {
     val minimumKeys = power
     val minimumChildren = power + 1
     val maximumKeys = power * 2
@@ -34,18 +32,15 @@ class MyBTreeNode(val power: Int, var isLeaf: Boolean = false, var parentNode: M
     }
 
     fun splitChild(index: Int, srcNode: MyBTreeNode) {
-
-        val tempNode = MyBTreeNode(srcNode.power, srcNode.isLeaf)
+        val tempNode = MyBTreeNode(srcNode.power, bTree, srcNode.isLeaf)
 
         repeat(minimumKeys) {
             tempNode.keys.add(srcNode.keys.removeFirst())
-            println("add key ${tempNode.keys.last()}")
         }
 
         if (!srcNode.isLeaf)
             repeat(minimumChildren) {
                 tempNode.children.add(srcNode.children.removeFirst())
-                println("add child ${tempNode.children.last()}")
             }
 
         children.add(index, tempNode)
@@ -55,27 +50,19 @@ class MyBTreeNode(val power: Int, var isLeaf: Boolean = false, var parentNode: M
 
     fun remove(key: Int) {
         val index = keys.indexOfLast { it < key } + 1
-        println("remove($key key $index index)")
         if (index < keys.size && keys[index] == key) {
             if (isLeaf)
                 removeFromLeaf(index)
             else
                 removeFromNonLeaf(index)
         } else {
-            if (isLeaf) {
-                println("Key $key doesn't exist")
+            if (isLeaf)
                 return
-            }
 
-            if (children[index].keys.size < minimumKeys)
-                fill(index)
-
-            val flag = index == keys.size
-            println("${children[index].keys.size} $index ${minimumKeys}")
-            if (flag && index > keys.size)
-                children[index - 1].remove(key)
-            else
-                children[index].remove(key)
+//            if (children[index].keys.size <= minimumKeys)
+//                fill(index)
+//
+            children[index].remove(key)
 
             if (children[index].keys.size < minimumKeys)
                 fill(index)
@@ -83,12 +70,10 @@ class MyBTreeNode(val power: Int, var isLeaf: Boolean = false, var parentNode: M
     }
 
     private fun removeFromLeaf(index: Int) {
-        println("removeFromLeaf($index index)")
         keys.removeAt(index)
     }
 
     private fun removeFromNonLeaf(index: Int) {
-        println("removeFromNonLeaf($index index)")
         val value = keys[index]
 
         if (children[index].keys.size > maximumKeys / 2) {
@@ -109,7 +94,6 @@ class MyBTreeNode(val power: Int, var isLeaf: Boolean = false, var parentNode: M
     }
 
     private fun fill(index: Int) {
-        println("fill($index index)")
         if (index != 0 && children[index - 1].keys.size >= minimumChildren)
             borrowFromPrev(index)
         else if (index != keys.size && children[index + 1].keys.size >= minimumChildren)
@@ -121,7 +105,6 @@ class MyBTreeNode(val power: Int, var isLeaf: Boolean = false, var parentNode: M
     }
 
     private fun borrowFromPrev(index: Int) {
-        println("borrowFromPrev($index index)")
         val first = children[index]
         val second = children[index - 1]
 
@@ -135,7 +118,6 @@ class MyBTreeNode(val power: Int, var isLeaf: Boolean = false, var parentNode: M
     }
 
     private fun borrowFromNext(index: Int) {
-        println("borrowFromNext($index index)")
         val first = children[index]
         val second = children[index + 1]
 
@@ -151,7 +133,6 @@ class MyBTreeNode(val power: Int, var isLeaf: Boolean = false, var parentNode: M
     }
 
     private fun getPredecessor(index: Int): Int {
-        println("getPredecessor($index index)")
         var current = children[index]
         while (current.isLeaf.not())
             current = current.children.last()
@@ -159,34 +140,47 @@ class MyBTreeNode(val power: Int, var isLeaf: Boolean = false, var parentNode: M
     }
 
     private fun getSubsequent(index: Int): Int {
-        println("getSubsequent($index index)")
         var current = children[index + 1]
         while (current.isLeaf.not())
             current = current.children.first()
         return current.keys.first()
     }
 
-    fun merge(index: Int) {
-        println("merge($index index)")
+    fun merge(index: Int, remove: Boolean = true) {
+
+        val listToAdd = arrayListOf<Int>()
+
         val first = children[index]
         val second = children[index + 1]
 
-        keys.removeAt(index)
+        if (remove)
+            keys.removeAt(index)
 
         repeat(second.keys.size) {
             first.keys.add(second.keys[it])
         }
 
-        if (!first.isLeaf)
-            repeat(second.children.size) {
-                first.children.add(second.children[it])
+        if (!first.isLeaf) {
+            second.children.first().keys.forEach {
+                listToAdd.add(it)
             }
 
+            repeat(second.children.size - 1) {
+                first.children.add(second.children[it + 1])
+            }
+
+//            println("${first.children.last().keys} $maximumKeys")
+            if (first.children.last().keys.size > maximumKeys)
+                splitChild(index, first)
+        }
+
         children.removeAt(index + 1)
+
+        listToAdd.forEach { bTree.insert(it) }
     }
 
 
-    fun traverse(resultString: ArrayList<String>, depth: Int) {
+    fun print(resultString: ArrayList<String>, depth: Int) {
         while (resultString.size <= depth)
             resultString.add("")
 
@@ -204,7 +198,7 @@ class MyBTreeNode(val power: Int, var isLeaf: Boolean = false, var parentNode: M
 
         children.forEach {
             if (!isLeaf)
-                it.traverse(resultString, depth + 1)
+                it.print(resultString, depth + 1)
         }
     }
 }

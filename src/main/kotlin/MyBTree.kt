@@ -6,12 +6,13 @@ class MyBTree(val power: Int) {
 
     lateinit var root: MyBTreeNode
 
-    fun traverse() {
+    fun print() {
         println("--------------------")
         val sb = arrayListOf<String>()
-        root.traverse(sb, 0)
+        root.print(sb, 0)
         sb.forEach { println(it) }
         println("--------------------")
+        println()
     }
 
     fun search(key: Int) = if (this::root.isInitialized.not())
@@ -21,19 +22,18 @@ class MyBTree(val power: Int) {
 
     fun insert(key: Int) {
         if (this::root.isInitialized.not()) {
-            root = MyBTreeNode(power, true).apply {
+            root = MyBTreeNode(power, this, true).apply {
                 keys.add(key)
             }
         } else {
             root.insertNotFull(key)
 
             if (root.keys.size > maximumKeys)
-                root = MyBTreeNode(power, false).apply {
+                root = MyBTreeNode(power, this, false).apply {
                     children.add(root.apply { parentNode = this })
                     splitChild(0, root)
                 }
         }
-        traverse()
     }
 
     fun remove(key: Int): Boolean {
@@ -50,8 +50,10 @@ class MyBTree(val power: Int) {
                     isAccessible = true
                     set("root", null)
                 }
-            else
+            else {
+                root.children[0].parentNode = null
                 root = root.children.first()
+            }
 
         return true
     }
