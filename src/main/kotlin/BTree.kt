@@ -408,6 +408,7 @@ class BTree(order: Int) {
         fun addChild(child: Node): Boolean {
             child.parent = this
             children.add(child)
+            children.sortBy { it.keys[0] }
             return true
         }
 
