@@ -1,5 +1,5 @@
 fun main() {
-    val t = MyBTree(2)
+    val t = BTree(2)
 
     listOf(
         1, 3, 7, 10, 11, 13,
@@ -7,22 +7,33 @@ fun main() {
         24, 25, 26, 21, 4, 5,
         20, 22, 2, 17, 12, 6
     ).forEach {
-        t.insert(it)
+        t.add(it)
     }
 
     println("Полученное дерево:")
-    t.print()
+    println(t)
 
     listOf(1, 6, 16, 25, 10, 17, 26, 101).forEach {
-        println("Число $it ${if (t.search(it) != null) "найдено" else "не найдено"}")
+        println("Число $it ${if (t.contains(it)) "найдено" else "не найдено"}")
     }
     println()
 
-    listOf(6, 13, 7, 4, 2, 16, 17).forEach {
+    listOf(6, 13, 7, 4, 2, 3, 24, 16, 19).forEach {
         t.remove(it)
         println("Дерево после удаления числа $it:")
-        t.print()
+        println(t)
     }
+
+//    listOf(1, 3, 4, 5, 6).forEach {
+//        t.add(it)
+//    }
+//
+//    println(t.toString())
+//    t.remove(1)
+//    println(t.toString())
+
+
+
 //
 //    t.remove(13)
 //    println("Traversal of tree after removing 13")
